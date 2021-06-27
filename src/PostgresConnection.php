@@ -18,13 +18,10 @@ use Thesis\Transaction\TransactionIsolationLevel;
  */
 final class PostgresConnection
 {
-    /**
-     * @param callable(int): ?Notify $getNotify
-     */
     public function __construct(
         private StatementExecutor $statementExecutor,
         private TransactionContext $transactionContext,
-        private $getNotify,
+        private Notifier $notifier,
         private ?ValueResolverRegistry $valueResolverRegistry = null,
         private ?Hydrator $hydrator = null,
         private ?ColumnTypeRegistry $columnTypeRegistry = null,
@@ -46,7 +43,6 @@ final class PostgresConnection
         return Result::create(
             $executedStatement->rows,
             $executedStatement->affectedRowsNumber,
-            $executedStatement->debugData,
             $this->hydrator,
             $this->columnTypeRegistry,
         );
@@ -62,8 +58,8 @@ final class PostgresConnection
         return $this->transactionContext->transactionally($operation, $isolationLevel);
     }
 
-    public function getNotify(int $msTimeout = 0): ?Notify
+    public function getNotify(int $timeoutMs = 0): ?Notify
     {
-        return ($this->getNotify)($msTimeout);
+        return $this->notifier->getNotify($timeoutMs);
     }
 }

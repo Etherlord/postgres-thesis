@@ -7,23 +7,25 @@ namespace Thesis\Postgres;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Thesis\Pdo\PdoStatementExecutor;
+use Thesis\Postgres\Notifier\LoggingNotifier;
+use Thesis\Postgres\Notifier\PdoNotifier;
 use Thesis\Result\ColumnTypeRegistry;
 use Thesis\Result\Hydrator;
 use Thesis\StatementContext\ValueResolverRegistry;
+use Thesis\StatementExecutor\ExecutionTimeCalculatingStatementExecutor;
 use Thesis\StatementExecutor\LoggingStatementExecutor;
-use Thesis\Transaction\LoggingTransactionHandler;
 use Thesis\Transaction\SqlTransactionHandler;
 use Thesis\Transaction\TransactionContext;
 
-final class PostgresDriver
+final class PostgresPdoDriver
 {
     private LoggerInterface $logger;
 
     public function __construct(
-        private ?Hydrator $hydrator = null,
         ?LoggerInterface $logger = null,
-        private ?ColumnTypeRegistry $columnTypeRegistry = null,
         private ?ValueResolverRegistry $valueResolverRegistry = null,
+        private ?Hydrator $hydrator = null,
+        private ?ColumnTypeRegistry $columnTypeRegistry = null,
         private array $options = [],
     ) {
         $this->logger = $logger ?? new NullLogger();
@@ -31,8 +33,6 @@ final class PostgresDriver
 
     /**
      * @psalm-pure
-     * @internal
-     * @psalm-internal Thesis\Postgres
      */
     public static function generatePdoDsn(PostgresDsn $dsn): string
     {
@@ -68,25 +68,18 @@ final class PostgresDriver
     public function connect(PostgresDsn $dsn): PostgresConnection
     {
         $pdo = new \PDO(self::generatePdoDsn($dsn), options: $this->options);
-        $statementExecutor = new LoggingStatementExecutor(new PdoStatementExecutor($pdo), $this->logger);
+
+        $statementExecutor = new LoggingStatementExecutor(
+            new ExecutionTimeCalculatingStatementExecutor(
+                new PdoStatementExecutor($pdo),
+            ),
+            $this->logger,
+        );
 
         return new PostgresConnection(
             $statementExecutor,
-            new TransactionContext(
-                new LoggingTransactionHandler(
-                    new SqlTransactionHandler($statementExecutor),
-                    $this->logger,
-                ),
-            ),
-            static function (int $msTimeout) use ($pdo): ?Notify {
-                $result = $pdo->pgsqlGetNotify(\PDO::FETCH_ASSOC, $msTimeout);
-
-                if ($result === false) {
-                    return null;
-                }
-
-                return new Notify($result['message'], $result['pid'], $result['payload'] ?? null);
-            },
+            new TransactionContext(new SqlTransactionHandler($statementExecutor)),
+            new LoggingNotifier(new PdoNotifier($pdo), $this->logger),
             $this->valueResolverRegistry,
             $this->hydrator,
             $this->columnTypeRegistry,
