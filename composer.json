@@ -1,0 +1,47 @@
+{
+    "name": "thesis/postgres",
+    "type": "library",
+    "description": "PostgreSQL build of Thesis based on PDO",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Valentin Udaltsov",
+            "homepage": "https://github.com/vudaltsov"
+        },
+        {
+            "name": "Pavel Ivanov",
+            "homepage": "https://github.com/Etherlord"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "ext-pdo": "*",
+        "thesis/pdo": "dev-master",
+        "thesis/thesis": "dev-master"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "icanhazstring/composer-unused": "^0.7",
+        "maglnet/composer-require-checker": "^3.3",
+        "phpunit/phpunit": "^9.5",
+        "psalm/plugin-phpunit": "~0.15",
+        "vimeo/psalm": "^4.8"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Thesis\\Postgres\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Thesis\\Postgres\\": "tests/"
+        }
+    },
+    "scripts": {
+        "fixcs": "php-cs-fixer fix -v",
+        "psalm": "psalm --no-diff --show-info --threads=4"
+    }
+}
