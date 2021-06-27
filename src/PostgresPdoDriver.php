@@ -11,7 +11,12 @@ use Thesis\Postgres\Notifier\LoggingNotifier;
 use Thesis\Postgres\Notifier\PdoNotifier;
 use Thesis\Result\ColumnTypeRegistry;
 use Thesis\Result\Hydrator;
+use Thesis\StatementContext\ValueResolver\IdentifierResolver;
+use Thesis\StatementContext\ValueResolver\LikeResolver;
 use Thesis\StatementContext\ValueResolverRegistry;
+use Thesis\StatementContext\ValueResolverRegistry\InMemoryValueResolverRegistry;
+use Thesis\StatementContext\ValueResolverRegistry\NullValueResolverRegistry;
+use Thesis\StatementContext\ValueResolverRegistry\ValueResolverRegistryChain;
 use Thesis\StatementExecutor\ExecutionTimeCalculatingStatementExecutor;
 use Thesis\StatementExecutor\LoggingStatementExecutor;
 use Thesis\Transaction\SqlTransactionHandler;
@@ -20,15 +25,23 @@ use Thesis\Transaction\TransactionContext;
 final class PostgresPdoDriver
 {
     private LoggerInterface $logger;
+    private ValueResolverRegistry $valueResolverRegistry;
 
     public function __construct(
         ?LoggerInterface $logger = null,
-        private ?ValueResolverRegistry $valueResolverRegistry = null,
+        ?ValueResolverRegistry $valueResolverRegistry = null,
         private ?Hydrator $hydrator = null,
         private ?ColumnTypeRegistry $columnTypeRegistry = null,
         private array $options = [],
     ) {
         $this->logger = $logger ?? new NullLogger();
+        $this->valueResolverRegistry = new ValueResolverRegistryChain([
+            $valueResolverRegistry ?? new NullValueResolverRegistry(),
+            new InMemoryValueResolverRegistry([
+                new IdentifierResolver(),
+                new LikeResolver(),
+            ]),
+        ]);
     }
 
     /**
