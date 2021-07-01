@@ -23,9 +23,7 @@ final class LoggingNotifier implements Notifier
 
     public function getNotify(int $timeoutMs = 0): ?Notify
     {
-        $this->logger->log($this->level, 'Get notify with timeout {timeout_ms} ms.', [
-            'timeout_ms' => $timeoutMs,
-        ]);
+        $this->logger->log($this->level, 'Get notify.');
 
         return $this->notifier->getNotify($timeoutMs);
     }
