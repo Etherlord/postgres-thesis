@@ -27,6 +27,7 @@ final class PostgresPdoDriver
         private ?Hydrator $hydrator = null,
         private ?ColumnTypeRegistry $columnTypeRegistry = null,
         private array $options = [],
+        private bool $debug = false,
     ) {
         $this->logger = $logger ?? new NullLogger();
     }
@@ -85,6 +86,7 @@ final class PostgresPdoDriver
             $this->valueResolverRegistry,
             $this->hydrator,
             $this->columnTypeRegistry,
+            $this->debug,
         );
     }
 }

@@ -18,6 +18,8 @@ use Thesis\Transaction\TransactionIsolationLevels;
  */
 final class PostgresConnection
 {
+    private const DEFAULT_CURSOR_LIMIT = 1000;
+
     public function __construct(
         private StatementExecutor $statementExecutor,
         private TransactionContext $transactionContext,
@@ -25,25 +27,56 @@ final class PostgresConnection
         private ?ValueResolverRegistry $valueResolverRegistry = null,
         private ?Hydrator $hydrator = null,
         private ?ColumnTypeRegistry $columnTypeRegistry = null,
+        private bool $debug = false,
     ) {
     }
 
     /**
      * @param Statement $statement
      * @throws \Thesis\StatementExecutor\StatementExecutionException
+     * @return Result<int, array>
      */
     public function execute(string|\Generator|callable $statement): Result
     {
-        $executedStatement = $this->statementExecutor->execute(
-            ...Tsx::resolve(
-                $statement,
-                $this->valueResolverRegistry,
-            ),
-        );
+        [$resolvedStatement, $parameters] = Tsx::resolve($statement, $this->valueResolverRegistry);
+        $executedStatement = $this->statementExecutor->execute($resolvedStatement, $parameters, $this->debug);
 
         return Result::create(
             $executedStatement->rows,
             $executedStatement->affectedRowsNumber,
+            $this->hydrator,
+            $this->columnTypeRegistry,
+        );
+    }
+
+    /**
+     * @param Statement $statement
+     * @throws \Thesis\StatementExecutor\StatementExecutionException
+     * @return Result<int, array>
+     */
+    public function cursor(string|\Generator|callable $statement, int $limit = self::DEFAULT_CURSOR_LIMIT): Result
+    {
+        $cursorName = uniqid('thesis_cursor_');
+        $this->execute(static fn (Tsx $tsx): string => "declare {$cursorName} cursor for {$tsx->embed($statement)}");
+        $fetchStatement = "fetch {$limit} from {$cursorName}";
+
+        return Result::create(
+            (function () use ($limit, $fetchStatement): \Generator {
+                do {
+                    $i = 0;
+                    $rows = $this
+                        ->statementExecutor
+                        ->execute($fetchStatement, debug: $this->debug)
+                        ->rows
+                    ;
+
+                    foreach ($rows as $row) {
+                        yield $row;
+                        ++$i;
+                    }
+                } while ($i >= $limit);
+            })(),
+            0,
             $this->hydrator,
             $this->columnTypeRegistry,
         );
