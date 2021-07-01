@@ -11,7 +11,7 @@ use Thesis\StatementContext\Tsx;
 use Thesis\StatementContext\ValueResolverRegistry;
 use Thesis\StatementExecutor\StatementExecutor;
 use Thesis\Transaction\TransactionContext;
-use Thesis\Transaction\TransactionIsolationLevel;
+use Thesis\Transaction\TransactionIsolationLevels;
 
 /**
  * @psalm-import-type Statement from Tsx
@@ -30,8 +30,9 @@ final class PostgresConnection
 
     /**
      * @param Statement $statement
+     * @throws \Thesis\StatementExecutor\StatementExecutionException
      */
-    public function execute(string|iterable|callable $statement): Result
+    public function execute(string|\Generator|callable $statement): Result
     {
         $executedStatement = $this->statementExecutor->execute(
             ...Tsx::resolve(
@@ -51,9 +52,10 @@ final class PostgresConnection
     /**
      * @template T of mixed|void
      * @param callable(): T $operation
+     * @param ?TransactionIsolationLevels::* $isolationLevel
      * @return T
      */
-    public function transactionally(callable $operation, ?TransactionIsolationLevel $isolationLevel = null)
+    public function transactionally(callable $operation, ?string $isolationLevel = null)
     {
         return $this->transactionContext->transactionally($operation, $isolationLevel);
     }
