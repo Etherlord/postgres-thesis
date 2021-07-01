@@ -16,7 +16,6 @@
     "require": {
         "php": "^8.0",
         "ext-pdo": "*",
-        "thesis/pdo": "dev-master",
         "thesis/thesis": "dev-master"
     },
     "require-dev": {
