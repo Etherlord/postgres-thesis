@@ -16,10 +16,10 @@ final class PostgresErrorResolvingStatementExecutor implements StatementExecutor
     ) {
     }
 
-    public function execute(string $statement, array $parameters = [], bool $debug = false): ExecutedStatement
+    public function execute(string $statement, array $parameters = []): ExecutedStatement
     {
         try {
-            return $this->statementExecutor->execute($statement, $parameters, $debug);
+            return $this->statementExecutor->execute($statement, $parameters);
         } catch (UnresolvedException $exception) {
             throw match ((string) $exception->errorCode) {
                 '23505' => new UniqueConstraintViolationException($exception->getMessage(), $exception->errorCode, $exception->getPrevious()),

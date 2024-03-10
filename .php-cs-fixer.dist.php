@@ -43,15 +43,12 @@ return
                     'try',
                 ],
             ],
-            'braces' => [
-                'allow_single_line_anonymous_class_with_empty_body' => true,
-                'allow_single_line_closure' => true,
-            ],
             'comment_to_phpdoc' => ['ignored_tags' => ['fixme']],
             'date_time_immutable' => true,
             'final_class' => true,
             'final_public_method_for_abstract_class' => true,
             'fopen_flags' => ['b_mode' => true],
+            'fully_qualified_strict_types' => false,
             'no_superfluous_phpdoc_tags' => ['allow_mixed' => false, 'allow_unused_params' => true, 'remove_inheritdoc' => true],
             'nullable_type_declaration_for_default_null_value' => true,
             'ordered_class_elements' => [
@@ -82,6 +79,7 @@ return
                 ],
             ],
             'ordered_imports' => ['imports_order' => ['class', 'function', 'const']],
+            'ordered_types' => ['sort_algorithm' => 'none'],
             'php_unit_strict' => false,
             'php_unit_test_case_static_method_calls' => false, // Todo: use HappyInc/php_unit_test_case_functions.
             'phpdoc_add_missing_param_annotation' => false,
@@ -91,6 +89,7 @@ return
             'phpdoc_types_order' => ['null_adjustment' => 'always_last', 'sort_algorithm' => 'none'],
             'return_assignment' => false,
             'single_line_comment_style' => ['comment_types' => ['hash']],
+            'single_line_empty_body' => false,
             'static_lambda' => true,
             'trailing_comma_in_multiline' => ['after_heredoc' => true, 'elements' => ['arrays', 'arguments', 'parameters']],
             'yoda_style' => ['equal' => false, 'identical' => false, 'less_and_greater' => false],

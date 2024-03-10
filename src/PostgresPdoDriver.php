@@ -11,9 +11,9 @@ use Thesis\Postgres\Notifier\PdoNotifier;
 use Thesis\Result\ColumnTypeRegistry;
 use Thesis\Result\Hydrator;
 use Thesis\StatementContext\ValueResolverRegistry;
+use Thesis\StatementExecutor\ExecutionTimeMeasuringStatementExecutor;
 use Thesis\StatementExecutor\LoggingStatementExecutor;
 use Thesis\StatementExecutor\PdoStatementExecutor;
-use Thesis\StatementExecutor\TimeDebuggingStatementExecutor;
 use Thesis\Transaction\SqlTransactionHandler;
 use Thesis\Transaction\TransactionContext;
 
@@ -27,7 +27,6 @@ final class PostgresPdoDriver
         private ?Hydrator $hydrator = null,
         private ?ColumnTypeRegistry $columnTypeRegistry = null,
         private array $options = [],
-        private bool $debug = false,
     ) {
         $this->logger = $logger ?? new NullLogger();
     }
@@ -71,7 +70,7 @@ final class PostgresPdoDriver
         $pdo = new \PDO(self::generatePdoDsn($dsn), options: $this->options);
 
         $statementExecutor = new LoggingStatementExecutor(
-            new TimeDebuggingStatementExecutor(
+            new ExecutionTimeMeasuringStatementExecutor(
                 new PostgresErrorResolvingStatementExecutor(
                     new PdoStatementExecutor($pdo),
                 ),
@@ -86,7 +85,6 @@ final class PostgresPdoDriver
             $this->valueResolverRegistry,
             $this->hydrator,
             $this->columnTypeRegistry,
-            $this->debug,
         );
     }
 }

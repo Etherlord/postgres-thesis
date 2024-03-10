@@ -27,19 +27,18 @@ final class PostgresConnection
         private ?ValueResolverRegistry $valueResolverRegistry = null,
         private ?Hydrator $hydrator = null,
         private ?ColumnTypeRegistry $columnTypeRegistry = null,
-        private bool $debug = false,
     ) {
     }
 
     /**
      * @param Statement $statement
-     * @throws \Thesis\StatementExecutor\StatementExecutionException
      * @return Result<int, array>
+     * @throws \Thesis\StatementExecutor\StatementExecutionException
      */
     public function execute(string|\Generator|callable $statement): Result
     {
         [$resolvedStatement, $parameters] = Tsx::resolve($statement, $this->valueResolverRegistry);
-        $executedStatement = $this->statementExecutor->execute($resolvedStatement, $parameters, $this->debug);
+        $executedStatement = $this->statementExecutor->execute($resolvedStatement, $parameters);
 
         return Result::create(
             $executedStatement->rows,
@@ -51,8 +50,8 @@ final class PostgresConnection
 
     /**
      * @param Statement $statement
-     * @throws \Thesis\StatementExecutor\StatementExecutionException
      * @return Result<int, array>
+     * @throws \Thesis\StatementExecutor\StatementExecutionException
      */
     public function cursor(string|\Generator|callable $statement, int $limit = self::DEFAULT_CURSOR_LIMIT): Result
     {
@@ -66,7 +65,7 @@ final class PostgresConnection
                     $i = 0;
                     $rows = $this
                         ->statementExecutor
-                        ->execute($fetchStatement, debug: $this->debug)
+                        ->execute($fetchStatement)
                         ->rows
                     ;
 
